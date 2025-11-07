@@ -1,21 +1,24 @@
 <?php
 include 'includes/config.php';
 $errors = [];
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = trim($_POST['login']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
-
+// Validate inputs
     if (empty($login) || empty($password) || empty($confirm_password)) {
         $errors[] = "All fields are required.";
     } elseif ($password !== $confirm_password) {
         $errors[] = "Passwords do not match.";
     } else {
+// Check if login already exists
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM utilisateurs WHERE login = ?");
         $stmt->execute([$login]);
         if ($stmt->fetchColumn() > 0) {
             $errors[] = "login already taken.";
         } else {
+// Insert new user into database
             $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             $stmt = $pdo->prepare("INSERT INTO utilisateurs (login, password) VALUES (?, ?)");
             if ($stmt->execute([$login, $hashed_password])) {
@@ -34,12 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="header">
-        <?php include 'includes/header.php'; ?>
-    </header>
+    <?php include 'includes/header.php'; ?>
     <main class="main">
         <form action="" method="post" class="form">
             <div>

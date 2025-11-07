@@ -1,6 +1,7 @@
 <?php
 include 'includes/config.php';
 
+// Ensure user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: connexion.php');
     exit();
@@ -9,10 +10,12 @@ if (!isset($_SESSION['user_id'])) {
 $errors = [];
 $success = '';
 
+// Fetch current user data
 $stmt = $pdo->prepare('SELECT id, login, password FROM utilisateurs WHERE id = ?');
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// If user not found, log out
 if (!$user) {
     session_unset();
     session_destroy();
@@ -22,15 +25,16 @@ if (!$user) {
 
 $loginValue = $user['login'];
 
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newLogin = trim($_POST['login'] ?? '');
     $newPassword = trim($_POST['password'] ?? '');
     $confirmPassword = trim($_POST['confirm_password'] ?? '');
-
+// Validate inputs
     if ($newLogin === '') {
         $errors[] = 'Le login ne peut pas être vide.';
     }
-
+// Validate password if provided
     if ($newPassword !== '') {
         if ($newPassword !== $confirmPassword) {
             $errors[] = 'Les mots de passe ne correspondent pas.';
@@ -38,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Le mot de passe doit contenir au moins 6 caractères.';
         }
     }
-
+// Check for login uniqueness
     if (!$errors) {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM utilisateurs WHERE login = ? AND id <> ?');
         $stmt->execute([$newLogin, $user['id']]);
@@ -46,20 +50,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Ce login est déjà utilisé par un autre utilisateur.';
         }
     }
-
+// Update user data
     if (!$errors) {
         $params = [$newLogin, $user['id']];
         $sql = 'UPDATE utilisateurs SET login = ?';
-
+// Update password if provided
         if ($newPassword !== '') {
             $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
             $sql .= ', password = ?';
             $params = [$newLogin, $hashedPassword, $user['id']];
         }
-
+// Finalize query
         $sql .= ' WHERE id = ?';
         $stmt = $pdo->prepare($sql);
-
+// Execute update
         if ($stmt->execute($params)) {
             $_SESSION['login'] = $newLogin;
             $loginValue = $newLogin;
@@ -79,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>

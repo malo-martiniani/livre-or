@@ -1,9 +1,11 @@
 <?php
 session_start();
+// Database configuration
 $host = 'localhost';
 $dbname = 'livreor';
 $username = 'root';
 $password = '';
+// Create a new PDO instance
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
